@@ -69,9 +69,11 @@
 ;;;; Sequence Functions
 
 (defun seq-sum (seq)
+  "Return sum of SEQ or 0 if SEQ is empty."
   (seq-reduce #'+ seq 0))
 
 (defun seq-add (&rest seqs)
+  "Compute the entry-wise sums of SEQS."
   (let ((result  (apply #'seq-mapn #'+ seqs))
         (type1 (type-of (car seqs))))
     (if (eq type1 'cons)
@@ -91,6 +93,11 @@
       (apply #'seq-max args)
     (cl-loop for col = seqs then (mapcar #'cdr col) while (car col)
              collect (apply #'seq-max (mapcar #'car col)))))
+
+(defun seq-is-subset (seq1 seq2)
+  "Return t if SEQ1 is a proper subset of SEQ2."
+  (and (seq-intersection seq1 seq2)
+       (not (seq-difference seq1 seq2))))
 
 ;;;; Vector Functions
 
