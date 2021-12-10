@@ -114,6 +114,18 @@
 (defun vector-all-zero-p (vec &optional indices)
   (vector-every-p vec indices #'zerop))
 
+;; Need to do make-vector in a loop, because if used in make-list, then all
+;; entries of the list will point to the same vector
+(defun make-vector2d (height width init)
+  (vconcat (cl-loop for n below height
+                    collect (make-vector width init))))
+
+(defun aref2d (a x y)
+  (aref (aref a y) x))
+
+;; Make aref2d setf-able
+(gv-define-setter aref2d (val a x y) `(setf (aref (aref ,a ,y) ,x) ,val))
+
 ;;;; Footer
 
 (provide 'aoc-helpers)
