@@ -32,37 +32,36 @@
           (cl-loop for pt in low-points
                    sum (car pt)))))
 
-
 (defun day09-part2 (&optional file debug)
   (let* ((data (aoc-input file))
          (height (length data))
          (len (length (car data)))
-         (grid (make-vector2d height len 0))
+         (grid (make-vector2d (+ height 2) (+ len 2) 0))
          (low-points (car (day09-part1 file)))
          (point-count (length low-points))
          (basin-counts (make-vector point-count 1)))
     ;; init with low points
     (cl-loop for (_score x y) elements of low-points using (index ind)
-             do (setf (aref2d grid x y) (1+ ind)))
+             do (setf (aref2d grid (1+ x) (1+ y)) (1+ ind)))
     ;; put in nines
     (cl-loop for line elements of data using (index y)
              do (cl-loop for x from 0 below len
                          when (= (aref line x) ?9)
-                         do (setf (aref2d grid x y) -1)))
+                         do (setf (aref2d grid (1+ x) (1+ y)) -1)))
     (when debug
       (message "Grid Before: %S" grid))
     ;; propagate and count basin sizes
     (setq found-zero t)
     (while found-zero
       (setq found-zero nil)
-      (cl-loop for y from 0 below height
-               do (cl-loop for x from 0 below len
+      (cl-loop for y from 1 to height
+               do (cl-loop for x from 1 to len
                            when (zerop (aref2d grid x y))
-                           do (let* ((left  (when (> x 0) (aref2d grid (1- x) y)))
-                                     (right (when (< x (1- len)) (aref2d grid (1+ x) y)))
-                                     (up    (when (> y 0) (aref2d grid x (1- y))))
-                                     (down  (when (< y (1- height)) (aref2d grid x (1+ y))))
-                                     (bestind (seq-max (delq nil (list left right up down)))))
+                           do (let* ((left (aref2d grid (1- x) y))
+                                     (right (aref2d grid (1+ x) y))
+                                     (up (aref2d grid x (1- y)))
+                                     (down (aref2d grid x (1+ y)))
+                                     (bestind (max left right up down)))
                                 (setq found-zero t)
                                 (when (> bestind 0)
                                   (setf (aref2d grid x y) bestind)
@@ -75,6 +74,8 @@
     (sort basin-counts #'>)
     (seq-let (a b c) basin-counts
       (cons (list a b c) (* a b c)))))
+
+
 
 
 ;;;; Notes
