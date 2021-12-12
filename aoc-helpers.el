@@ -52,6 +52,9 @@
       (apply #'message args)
     (insert (apply #'format args))))
 
+(defmacro debugmsg (format-string &rest args)
+  (list 'when 'debug (append (list 'message format-string) args)))
+
 ;;;; String Functions
 
 (defun str2num (x &optional base)
