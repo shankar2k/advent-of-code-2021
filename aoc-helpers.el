@@ -28,6 +28,7 @@
 ;;;; Requirements
 
 (require 's)
+(require 'ht)
 
 ;;;; Input / Loading  Functions
 
@@ -88,14 +89,14 @@
   (if (<= (length seqs) 1)
       (apply #'seq-min args)
     (cl-loop for col = seqs then (mapcar #'cdr col) while (car col)
-             collect (apply #'seq-min (mapcar #'car col)))))
+             collect (seq-min (mapcar #'car col)))))
 
 ;; FIXME! returns a list due to collect
 (defun sbr-seq-max (&rest seqs)
   (if (<= (length seqs) 1)
-      (apply #'seq-max args)
+      (apply #'seq-max seqs)
     (cl-loop for col = seqs then (mapcar #'cdr col) while (car col)
-             collect (apply #'seq-max (mapcar #'car col)))))
+             collect (seq-max (mapcar #'car col)))))
 
 (defun seq-is-subset (seq1 seq2)
   "Return t if SEQ1 is a proper subset of SEQ2."
