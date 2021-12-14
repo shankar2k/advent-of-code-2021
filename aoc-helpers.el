@@ -95,10 +95,10 @@
              finally return (list format-regexp ctrl-strings))))
 
 (defun s-scan--control-regexp (control)
-  (pcase (control)
+  (pcase control
     ("%s" (rx (group (1+ anything))))
     ("%c" (rx (group anything)))
-    ("%d" (rx (group (1+ digit))))))
+    ("%d" (rx (group (opt "-") (1+ digit))))))
 
 (defun s-scan--process-control (string control)
   (pcase control
@@ -109,7 +109,7 @@
 
 (defun s-scan-string (format-string s)
   (let ((s (s-chomp s)))
-    (seq-let (format-regexp controls) (sbr-scan--format-regexp format-string)
+    (seq-let (format-regexp controls) (s-scan--format-regexp format-string)
       (when (string-match format-regexp s)
         (if (= (length controls) 1)
             (s-scan--process-control (match-string 1 s) (car controls))
