@@ -52,16 +52,15 @@
                                         graph debug part2)))))
 
 (defun day12 (&optional file part2 debug)
-  (let* ((data (aoc-input file))
-         (edges (mapcar (lambda (line) (split-string line "-")) data))
+  (let* ((edges (aoc-input file '(newline "%s-%s")))
          (graph (make-graph edges t debug)))
     (get-path-count "start" nil graph debug part2)))
 
 
 ;;;; Notes
 
-;; * How to initialize hash-table with dynamic values?
-;; * Are hash-tables slower than lists for smaller lengths?
+;; - How to initialize hash-table with dynamic values?
+;; - Are hash-tables slower than lists for smaller lengths?
 
 ;;;; Old Task Functions
 
