@@ -28,10 +28,33 @@
 ;;;; Requirements
 
 (require 's)
+(require 'f)
 (require 'ht)
 
 ;;;; Input / Loading  Functions
 
+(defvar aoc-input-file "input.txt"
+  "Default input file for Advent of Code puzzles.")
+
+(defvar aoc-test-file "input_test.txt"
+  "Default test input file for Advent of Code puzzles.")
+
+(defun aoc-input (&optional file format-spec type)
+  (let* ((data (f-read (cond ((stringp file) file)
+                             ((symbolp file)
+                              (if (eq file 'test)
+                                  aoc-test-file
+                                (error "Unknown file parameter %S" file)))
+                             (t aoc-input-file))))
+         (format-spec  (pcase (or format-spec 'string)
+                         ((or (pred stringp) (pred listp))
+                          format-spec)
+                         ('string '(newline "%s"))
+                         ('int    '(newline "%d"))
+                         ('line   "%s"))))
+    (s-scan format-spec data type)))
+
+;; SBR: Older, more limited version that doesn't use s-scan
 (defun aoc-input-old (&optional file type delim)
   (let* ((file (or file filename))
          (type (or type 'string))
@@ -45,22 +68,7 @@
         (str2num sdata)
       sdata)))
 
-(defun aoc-input (&optional file type)
-  (let* ((type (or type 'string))
-         (data (f-read (or file filename)))
-         (format-spec  (pcase (or type 'string)
-                         ((or (pred stringp) (pred listp))
-                          type)
-                         ('string '(newline "%s"))
-                         ('int    '(newline "%d"))
-                         ('line   "%s"))))
-    (s-scan format-spec data)))
-         
-         
-
-
 ;;;; Display Functions
-
 (defun sbr-print (debug &rest args)
   (if debug
       (apply #'message args)
@@ -107,15 +115,16 @@
     ("%d" (string-to-number string))))
 
 
-(defun s-scan-string (format-string s)
+(defun s-scan-string (format-string s &optional type)
   (let ((s (s-chomp s)))
     (seq-let (format-regexp controls) (s-scan--format-regexp format-string)
       (when (string-match format-regexp s)
         (if (= (length controls) 1)
             (s-scan--process-control (match-string 1 s) (car controls))
-          (cl-loop for ctrl element of controls using (index n)
-                   collect (s-scan--process-control
-                            (match-string (1+ n) s) ctrl)))))))
+          (seq-into (cl-loop for ctrl element of controls using (index n)
+                             collect (s-scan--process-control
+                                      (match-string (1+ n) s) ctrl))
+                    (or type 'list)))))))
 
 (defun s-scan--delim (delim)
   (if (stringp delim)
@@ -127,7 +136,7 @@
       (t (error "Unrecognized delimiter %S" delim)))))
 
 
-(defun s-scan (format-spec s)
+(defun s-scan (format-spec s &optional type)
   "Extract parameters from string S subject to FORMAT-SPEC.
 
 If FORMAT-SPEC is a string, then it is a format control string
@@ -155,14 +164,21 @@ list, enabling hierarchical extraction of parameters from S. If
 there are less format specs FMT-I then there are substrings of S,
 then the last format spec FMT-M will be applied to the remaining
 substrings. If no FMT-I are provided, then the default format
-\"%s\" is used."
+\"%s\" is used.
+
+Optional parameter TYPE converts the extracted parameter sequence
+to a different type. TYPE can be one of the following symbols:
+vector, string or list. The conversion is applied deeply to
+sub-sequences, and thus for hierarchical parameter data, only the
+type vector and list are supported."
   (if (stringp format-spec)
-      (s-scan-string format-spec s)
+      (s-scan-string format-spec s type)
     (let ((delim (s-scan--delim (car format-spec)))
           (format-list (or (cdr format-spec) '("%s"))))
-      (cl-loop for token in (split-string s delim t "\n")
-               for fmt = format-list then (or (cdr fmt) fmt)
-               collect (s-scan (car fmt) token)))))
+      (seq-into (cl-loop for token in (split-string s delim t "\n")
+                         for fmt = format-list then (or (cdr fmt) fmt)
+                         collect (s-scan (car fmt) token type))
+                (or type 'list)))))
 
 ;;;; List Functions
 
@@ -231,11 +247,15 @@ substrings. If no FMT-I are provided, then the default format
 ;; Make aref2d setf-able
 (gv-define-setter aref2d (val a x y) `(setf (aref (aref ,a ,y) ,x) ,val))
 
+;;;; Hash Table Functions
+
+(defun ht-inc (table key &optional x)
+  (if (ht-get table key)
+      (cl-incf (ht-get table key) (or x 1))
+    (ht-set table key (or x 1))))
+
 ;;;; Footer
 
 (provide 'aoc-helpers)
 
 ;;; aoc-helpers.el ends here
-
-
-
