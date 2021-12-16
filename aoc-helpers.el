@@ -41,7 +41,7 @@
 
 (defun aoc-input (&optional file format-spec type)
   (let* ((data (f-read (cond ((stringp file) file)
-                             ((symbolp file)
+                             ((and file (symbolp file))
                               (if (eq file 'test)
                                   aoc-test-file
                                 (error "Unknown file parameter %S" file)))
@@ -189,7 +189,7 @@ type vector and list are supported."
 
 ;;;; Sequence Functions
 
-(defun seq-sum (seq)
+(defun seq-sum (&optional seq)
   "Return sum of SEQ or 0 if SEQ is empty."
   (seq-reduce #'+ seq 0))
 
