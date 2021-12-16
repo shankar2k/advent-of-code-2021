@@ -193,6 +193,11 @@ type vector and list are supported."
   "Return sum of SEQ or 0 if SEQ is empty."
   (seq-reduce #'+ seq 0))
 
+(defun seq-product (&optional seq)
+  "Return sum of SEQ or 0 if SEQ is empty."
+  (seq-reduce #'* seq 1))
+
+
 (defun seq-add (&rest seqs)
   "Compute the entry-wise sums of SEQS."
   (let ((result  (apply #'seq-mapn #'+ seqs))
