@@ -85,9 +85,9 @@
   (let* ((length-id (get-str bdata 1))
          (do-length (equal length-id "0"))
          (len-or-count (progn
-                         (if do-length
-                             (debugmsg "0 --> length operator")
-                           (debugmsg "1 --> count operator"))
+                         (debugmsg (if do-length
+                                       "0 --> length operator"
+                                   "1 --> count operator"))
                          (get-int bdata (if do-length 15 11) debug)))
          (packet-end (+ packet-index len-or-count))
          (n 0)
@@ -122,6 +122,7 @@
 ;;   - If variable not defined as argument,
 ;;   - then will look in the surrounding context
 ;;   - use lexically scope variables to keep track
+;;   - global packet index leads to cleanest solution
 
 ;;;; Old Task Functions
 
