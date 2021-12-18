@@ -113,7 +113,10 @@
          (bdata (hex2bin hdata hex-table)))
     (seq-let (versions operations) (get-packet bdata debug t)
       (if part2
-        (eval operations)
+          (progn
+            (when (eq part2 'display)
+              (message "%S" operations)
+              (eval operations)))
       (seq-sum versions)))))
 
 ;;;; Notes
