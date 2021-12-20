@@ -92,21 +92,29 @@
 
 
 (defun s-scan--format-regexp (format-string)
-  (let ((ctrl-regexp "%[cds]"))
+  (let ((ctrl-regexp (rx "%" (optional "*") (any "cds"))))
     (cl-loop for ind = 0 then (match-end 0)
              while (string-match ctrl-regexp format-string ind)
              for ctrl = (match-string 0 format-string)
              concat (substring format-string ind
                                (match-beginning 0)) into format-regexp
              concat (s-scan--control-regexp ctrl) into format-regexp
+             unless (s-scan--is-ignored ctrl)
              collect ctrl into ctrl-strings
              finally return (list format-regexp ctrl-strings))))
 
+(defun s-scan--is-ignored (control)
+  (eq (aref control 1) ?*))
+
 (defun s-scan--control-regexp (control)
-  (pcase control
-    ("%s" (rx (group (1+ anything))))
-    ("%c" (rx (group anything)))
-    ("%d" (rx (group (opt "-") (1+ digit))))))
+  (let ((regex (pcase (aref control (1- (length control)))
+                 (?s (rx (1+ anything)))
+                 (?c (rx anything))
+                 (?d (rx (opt "-") (1+ digit))))))
+    (if (s-scan--is-ignored control)
+        regex
+      (rx (group (regexp regex))))))
+
 
 (defun s-scan--process-control (string control)
   (pcase control
@@ -148,6 +156,9 @@ Currently, the following control codes are recognized:
 %d means extract a signed number in decimal.
 %c means extract a single character.
 
+A %-sequence may contain an optional * flag, which indicates that
+the parameter is to be read from S but not extracted.
+
 If FORMAT-SPEC is a list, it should be of the form
 (DELIM FMT-1 FMT-2 ...), where DELIM is a delimiter used to split S
 into substrings, and FMT-1, FMT-2, FMT-3, ..., FMT-M are format specs used
@@ -177,7 +188,9 @@ type vector and list are supported."
           (format-list (or (cdr format-spec) '("%s"))))
       (seq-into (cl-loop for token in (split-string s delim t "\n")
                          for fmt = format-list then (or (cdr fmt) fmt)
-                         collect (s-scan (car fmt) token type))
+                         for sub-scan = (s-scan (car fmt) token type)
+                         when sub-scan
+                         collect sub-scan)
                 (or type 'list)))))
 
 ;;;; List Functions
