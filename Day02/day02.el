@@ -7,6 +7,18 @@
 ;;;; Task Functions
 
 (defun day02 (&optional part2 file)
+  (cl-loop for (command step) in (aoc-input file '(newline "%s %d"))
+           with depth = 0 with pos = 0 with aim = 0
+           do (pcase command
+                ("forward"
+                 (cl-incf pos step)
+                 (when part2
+                   (cl-incf depth (* aim step))))
+                ("up" (cl-decf (if part2 aim depth) step))
+                ("down" (cl-incf (if part2 aim depth) step)))
+           finally return  (format "pos=%d, depth=%d, result=%d" pos depth (* pos depth))))
+
+(defun day02-v2 (&optional part2 file)
   (cl-loop for line in (aoc-input file) with depth = 0 with pos = 0 with aim = 0
            do (let* ((command (split-string line " "))
                      (step (string-to-number (cadr command))))
