@@ -219,6 +219,15 @@ type vector and list are supported."
         result
       (seq-into result type1))))
 
+(defun seq-mul (&rest seqs)
+  "Compute the entry-wise products of SEQS."
+  (let ((result  (apply #'seq-mapn #'* seqs))
+        (type1 (type-of (car seqs))))
+    (if (eq type1 'cons)
+        result
+      (seq-into result type1))))
+
+
 ;; FIXME! returns a list due to collect
 (defun sbr-seq-min (&rest seqs)
   (if (<= (length seqs) 1)
